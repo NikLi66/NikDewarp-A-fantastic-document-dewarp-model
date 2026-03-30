@@ -1,24 +1,40 @@
+<p align="right">
+  English | <a href="./README.zh.md">中文</a>
+</p>
+
 # Introduction
-这是一个作者自己基于Control Points进行了一系列优化的矫正模型训练/推理代码，训练数据格式基本与Control Points的数据一致，分别为输入图片与对应的control points（建议参考[control points](https://github.com/gwxie/Document-Dewarping-with-Control-Points)与[造数据方法](https://github.com/gwxie/Synthesize-Distorted-Image-and-Its-Control-Points)）。下面是本方法效果与市面上某产品效果的比对。
+This repository provides training and inference code for a document rectification model based on Control Points, with a series of improvements proposed by the author.
+
+The training data format is largely consistent with Control Points, consisting of input images and their corresponding control points. It is recommended to refer to:
+- [Control Points](https://github.com/gwxie/Document-Dewarping-with-Control-Points)
+- [Data synthesis method](https://github.com/gwxie/Synthesize-Distorted-Image-and-Its-Control-Points)
+
+Below is a comparison between the results of this method and a commercial product:
+
 | ![](1.png) | ![](2.png) | ![](3.png) |
 |:---:|:---:|:---:|
-| 输入图片 | 某产品效果 | 我的效果 |
+| Input Image | Commercial Product | Our Result |
 
-可以看到，当前市面上的某产品效果，会因为矫正丢掉部分边界信息（如上图中的标题、成绩），但我的效果由于对训练数据处理问题，可以保留所有图上的信息，这对很多下游任务（如OCR、版面检测）有相当大的帮助
+As shown above, some commercial solutions may lose boundary information (e.g., titles and scores) during rectification. In contrast, due to improved data processing, our method preserves all content in the image. This is highly beneficial for downstream tasks such as OCR and layout analysis.
 
-# Contributes
-我的主要贡献如下：
-- 优化了原造数据方法，原造数据方法只造了32*32个control points，我新的造数据方法输出了所有像素点的对应位置，使得效果得到了巨大的提升；
-- 提供了一种非常fancy的数据处理方式，保证了输入图片的每个像素点都会在输出图片上体现；
-- 提供了一些对loss的约束（i.e. 增加了特殊位置的权重），以及对原有loss进行了微调优化；
-- 优化了模型结构，将传统UNet换成了Restormer结构。效果有显著提升；
+# Contributions
+The main contributions of this work are:
+
+- Improved the original data synthesis method. The original method generates only 32×32 control points, while the new method produces dense pixel-level correspondences, leading to significant performance gains.
+- Introduced a novel (“fancy”) data processing strategy that ensures every input pixel is preserved in the output image.
+- Enhanced the loss function by adding constraints (e.g., higher weights for specific regions) and fine-tuned the original loss design.
+- Optimized the model architecture by replacing the traditional UNet with a Restormer-based structure, achieving notable improvements.
 
 # Discussion
-总的来看，本方法使用了较简单的模型（亲测UNet效果也很好），嵌入了fancy的数据处理方式，以及重新改造了generate training data的方法，使得训练数据质量大幅提升，从而模型效果也得到了大幅的增强。
+Overall, this method uses a relatively simple model (UNet also performs well in practice), combined with an advanced data processing pipeline and a redesigned data synthesis strategy. These improvements significantly enhance the quality of training data, which in turn leads to better model performance.
 
-通过经验分析，数据的质量提升为本项目最大的改进点，模型选型上，我只是采用了在图片处理上当时(2024年）较为常用的restormer模型，并未做过多的优化。对loss的约束，属于是对原有方法（control points）的一些错误修正。对于数据的全新预处理方法，是模型能够保留所有信息的关键步骤，但就模型效果而言，贡献不如训练数据的质量提升。
+From empirical analysis, the biggest improvement comes from better data quality. The choice of model (Restormer, a commonly used architecture in 2024 for image processing) plays a secondary role. The loss modifications mainly correct issues in the original Control Points method.
+
+The redesigned data preprocessing pipeline is the key factor enabling the model to preserve all information. However, in terms of overall performance, its contribution is still smaller than that of improved training data quality.
 
 # Tips
-训练数据的格式
+## Training Data Format
 
-一个lst文件，文件中的每一行是一个gw文件地址，此代码加载数据可能有点慢，建议大家可以自己写个多进程加载，速度快些。
+- A `.lst` file is used, where each line contains the path to a `.gw` file.
+- Data loading in the current implementation may be slow.
+- It is recommended to implement multi-process data loading for better performance.
